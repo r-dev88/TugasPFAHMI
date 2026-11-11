@@ -27,6 +27,8 @@ Route::get('/admin/about', [aboutcontroller::class, 'index']);
 Route::get('/admin/student', [studentcontroller::class, 'index'])->name('admin.student.index');
 Route::get('/admin/student/create', [studentcontroller::class, 'create'])->name('admin.student.create');
 Route::post('/admin/student', [studentcontroller::class, 'store'])->name('admin.student.store');
+Route::put('/admin/student/{student}', [studentcontroller::class, 'update'])->name('admin.student.update');
+Route::delete('/admin/student/{student}', [studentcontroller::class, 'destroy'])->name('admin.student.destroy');
 
 Route::get('/admin/classroom', [ClassroomController::class, 'index']);
 Route::get('/admin/classroom/{classroom}', [ClassroomController::class, 'show'])->name('admin.classroom.show');

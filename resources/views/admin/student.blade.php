@@ -21,137 +21,163 @@
     @endif
 
     <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
-    <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
-        <!-- Start coding here -->
-        <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
-                <div class="w-full md:w-1/2">
-                    <form class="flex items-center">
-                        <label for="simple-search" class="sr-only">Search</label>
-                        <div class="relative w-full">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+        <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+            <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
+                <div class="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
+                    <form method="GET" action="{{ route('admin.student.index') }}"
+                        class="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap lg:max-w-4xl">
+                        <div class="relative w-full sm:w-64">
+                            <label for="student-search" class="sr-only">Cari siswa</label>
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg aria-hidden="true" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="currentColor"
+                                    viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                        clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <input type="text" id="simple-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Search" required="">
+                            <input type="search" id="student-search" name="search" value="{{ $search }}"
+                                placeholder="Cari nama, NIS, atau alamat..."
+                                class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
                         </div>
+
+                        <select name="classroom_id"
+                            class="rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                            <option value="">Semua Kelas</option>
+                            @foreach ($classrooms as $classroom)
+                                <option value="{{ $classroom->id }}" @selected($classroomId === $classroom->id)>
+                                    {{ $classroom->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <select name="status"
+                            class="rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                            <option value="">Semua Status</option>
+                            <option value="active" @selected($status === 'active')>Aktif</option>
+                            <option value="inactive" @selected($status === 'inactive')>Tidak Aktif</option>
+                        </select>
+
+                        <button type="submit"
+                            class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            Cari
+                        </button>
+
+                        @if ($search !== '' || $classroomId > 0 || $status !== '')
+                            <a href="{{ route('admin.student.index') }}"
+                                class="inline-flex items-center px-2 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                                Reset
+                            </a>
+                        @endif
                     </form>
-                </div>
-                <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+
                     <button type="button" id="create-student-trigger" data-modal-target="create-student-modal"
                         data-modal-toggle="create-student-modal"
-                        class="flex items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                        <svg class="h-3.5 w-3.5 mr-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path clip-rule="evenodd" fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
+                        class="flex flex-shrink-0 items-center justify-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <svg class="mr-2 h-3.5 w-3.5" fill="currentColor" viewbox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path clip-rule="evenodd" fill-rule="evenodd"
+                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
                         </svg>
                         Tambah Siswa
                     </button>
                 </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-4 py-3">NO</th>
-                            <th scope="col" class="px-4 py-3">NAMA</th>
-                            <th scope="col" class="px-4 py-3">KELAS</th>
-                            <th scope="col" class="px-4 py-3">NIS</th>
-                            <th scope="col" class="px-4 py-3">STATUS</th>
-                            <th scope="col" class="px-4 py-3">
-                                <span class="sr-only">Actions</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($students as $student)
-                        <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $loop->iteration }}</th>
-                            <td class="px-4 py-3">{{ $student->nama }}</td>
-                            <td class="px-4 py-3">{{ $student->classroom->name ?? '-' }}</td>
-                            <td class="px-4 py-3">{{ $student->nis }}</td>
-                            <td class="px-4 py-3">
-                                <span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $student->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">
-                                    {{ $student->is_active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 flex items-center justify-end">
-                                <button id="student-{{ $student->id }}-dropdown-button" data-dropdown-toggle="student-{{ $student->id }}-dropdown" class="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
-                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    </svg>
-                                </button>
-                                <div id="student-{{ $student->id }}-dropdown" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-                                    <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="student-{{ $student->id }}-dropdown-button">
-                                        <li>
-                                            <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Show</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit</a>
-                                        </li>
-                                    </ul>
-                                    <div class="py-1">
-                                        <a href="#" class="block py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-red-500 dark:hover:text-white">Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                Tidak ada data siswa ditemukan.
-                            </td>
-                        </tr>
-                        @endforelse
 
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">NO</th>
+                                <th scope="col" class="px-4 py-3">NAMA</th>
+                                <th scope="col" class="px-4 py-3">KELAS</th>
+                                <th scope="col" class="px-4 py-3">NIS</th>
+                                <th scope="col" class="px-4 py-3">ALAMAT</th>
+                                <th scope="col" class="px-4 py-3">STATUS</th>
+                                <th scope="col" class="px-4 py-3 text-right">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($students as $student)
+                                <tr class="border-b hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700">
+                                    <th scope="row"
+                                        class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 dark:text-white">
+                                        {{ $students->firstItem() + $loop->index }}
+                                    </th>
+                                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                                        {{ $student->nama }}
+                                    </td>
+                                    <td class="px-4 py-3">{{ $student->classroom?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3">{{ $student->nis }}</td>
+                                    <td class="max-w-xs px-4 py-3">
+                                        {{ $student->address ? \Illuminate\Support\Str::limit($student->address, 40) : '-' }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="rounded px-2.5 py-0.5 text-xs font-medium {{ $student->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">
+                                            {{ $student->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" id="edit-student-trigger-{{ $student->id }}"
+                                                data-modal-target="edit-student-modal-{{ $student->id }}"
+                                                data-modal-toggle="edit-student-modal-{{ $student->id }}"
+                                                class="inline-flex items-center whitespace-nowrap rounded-lg bg-yellow-400 px-3 py-2 text-xs font-medium text-white hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 dark:focus:ring-yellow-800">
+                                                Edit
+                                            </button>
 
-                    </tbody>
-                </table>
+                                            <form action="{{ route('admin.student.destroy', $student) }}" method="POST"
+                                                onsubmit="return confirm('Hapus data siswa ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="inline-flex items-center whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        Tidak ada data siswa ditemukan.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div
+                    class="flex flex-col gap-3 border-t border-gray-200 p-4 dark:border-gray-700 md:flex-row md:items-center md:justify-between">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Menampilkan
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ $students->firstItem() ?? 0 }}</span>
+                        &ndash;
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ $students->lastItem() ?? 0 }}</span>
+                        dari
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ $students->total() }}</span>
+                        siswa
+                    </p>
+
+                    {{ $students->links() }}
+                </div>
             </div>
-            <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4" aria-label="Table navigation">
-                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    Showing
-                    <span class="font-semibold text-gray-900 dark:text-white">1-10</span>
-                    of
-                    <span class="font-semibold text-gray-900 dark:text-white">1000</span>
-                </span>
-                <ul class="inline-flex items-stretch -space-x-px">
-                    <li>
-                        <a href="#" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                            <span class="sr-only">Previous</span>
-                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
-                    </li>
-                    <li>
-                        <a href="#" aria-current="page" class="flex items-center justify-center text-sm z-10 py-2 px-3 leading-tight text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">...</a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">100</a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                            <span class="sr-only">Next</span>
-                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
         </div>
-    </div>
     </section>
 
     @include('student.create')
+
+    @foreach ($students as $student)
+        @include('student.edit', ['student' => $student])
+    @endforeach
+
+    @if ($errors->any() && old('student_id'))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('edit-student-trigger-{{ (int) old('student_id') }}')?.click();
+            });
+        </script>
+    @endif
 </x-admin.layout>

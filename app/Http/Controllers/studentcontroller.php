@@ -5,29 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Classroom;
 use App\Models\Student;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class studentcontroller extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('admin.student', $this->studentPageData());
+        return $this->renderIndex($request);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('admin.student', [
-            ...$this->studentPageData(),
-            'openCreateModal' => true,
-        ]);
+        return $this->renderIndex($request, openCreateModal: true);
     }
 
     /**
@@ -40,7 +37,12 @@ class studentcontroller extends Controller
             'nis' => ['required', 'string', 'max:10', 'unique:students,nis'],
             'classroom_id' => ['required', 'integer', 'exists:classrooms,id'],
             'address' => ['nullable', 'string'],
-        ]);
+            'is_active' => ['sometimes', 'boolean'],
+        ], $this->validationMessages());
+
+        $validated['is_active'] = $request->has('is_active')
+            ? $request->boolean('is_active')
+            : true;
 
         Student::create($validated);
 
@@ -50,52 +52,92 @@ class studentcontroller extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Student $student): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'nama' => ['required', 'string', 'max:100'],
+            'nis' => ['required', 'string', 'max:10', Rule::unique('students', 'nis')->ignore($student->id)],
+            'classroom_id' => ['required', 'integer', 'exists:classrooms,id'],
+            'address' => ['nullable', 'string'],
+            'is_active' => ['sometimes', 'boolean'],
+        ], $this->validationMessages());
+
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active');
+        }
+
+        $student->update($validated);
+
+        return redirect()
+            ->route('admin.student.index')
+            ->with('success', 'Data siswa berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Student $student): RedirectResponse
     {
-        //
+        $student->delete();
+
+        return redirect()
+            ->route('admin.student.index')
+            ->with('success', 'Data siswa berhasil dihapus.');
     }
 
     /**
-     * Data yang dibutuhkan halaman daftar dan form siswa.
-     *
-     * @return array{
-     *     title: string,
-     *     students: Collection<int, Student>,
-     *     classrooms: Collection<int, Classroom>
-     * }
+     * Render the student list, optionally opening the create modal.
      */
-    private function studentPageData(): array
+    private function renderIndex(Request $request, bool $openCreateModal = false): View
+    {
+        $search = trim((string) $request->query('search', ''));
+        $classroomId = $request->integer('classroom_id');
+        $status = (string) $request->query('status', '');
+
+        $students = Student::query()
+            ->with('classroom')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('nama', 'like', "%{$search}%")
+                        ->orWhere('nis', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
+                });
+            })
+            ->when($classroomId > 0, fn ($query) => $query->where('classroom_id', $classroomId))
+            ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status) {
+                $query->where('is_active', $status === 'active');
+            })
+            ->orderBy('nama')
+            ->orderBy('nis')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.student', [
+            'title' => 'Student',
+            'students' => $students,
+            'classrooms' => Classroom::orderBy('name')->get(),
+            'search' => $search,
+            'classroomId' => $classroomId,
+            'status' => $status,
+            'openCreateModal' => $openCreateModal,
+        ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationMessages(): array
     {
         return [
-            'title' => 'Student',
-            'students' => Student::with('classroom')->get(),
-            'classrooms' => Classroom::orderBy('name')->get(),
+            'nama.required' => 'Nama siswa wajib diisi.',
+            'nama.max' => 'Nama siswa maksimal 100 karakter.',
+            'nis.required' => 'NIS wajib diisi.',
+            'nis.unique' => 'NIS sudah digunakan.',
+            'nis.max' => 'NIS maksimal 10 karakter.',
+            'classroom_id.required' => 'Kelas wajib dipilih.',
+            'classroom_id.exists' => 'Kelas tidak ditemukan.',
         ];
     }
 }

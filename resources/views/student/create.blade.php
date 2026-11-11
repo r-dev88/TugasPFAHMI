@@ -90,6 +90,20 @@
                             <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div>
+                        <label for="is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                            Status
+                        </label>
+                        <select id="is_active" name="is_active"
+                            class="bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:text-white {{ $errors->has('is_active') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }}">
+                            <option value="1" @selected((string) old('is_active', '1') === '1')>Aktif</option>
+                            <option value="0" @selected((string) old('is_active') === '0')>Tidak Aktif</option>
+                        </select>
+                        @error('is_active')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Footer modal -->
@@ -108,7 +122,7 @@
     </div>
 </div>
 
-@if ($errors->any() || ($openCreateModal ?? false))
+@if (($errors->any() && ! old('student_id')) || ($openCreateModal ?? false))
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('create-student-trigger')?.click();
